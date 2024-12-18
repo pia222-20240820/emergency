@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config
+# from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -137,9 +137,9 @@ if DEBUG:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # 최종적으로 모을 경로
 
 
-NAVER_CLIENT_ID = config('NAVER_CLIENT_ID')
-NAVER_CLIENT_SECRET = config('NAVER_CLIENT_SECRET')
-OPENAI_API_KEY = config('OPENAI_API_KEY')
+# NAVER_CLIENT_ID = config('NAVER_CLIENT_ID:')
+# NAVER_CLIENT_SECRET = config('NAVER_CLIENT_SECRET')
+# OPENAI_API_KEY = config('OPENAI_API_KEY')
 
 
 # CORS 설정
