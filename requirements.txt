@@ -1,0 +1,8 @@
+Django==5.1.4
+requests
+folium
+python-decouple
+langchain-openai
+langchain-chroma
+langchain-core
+tiktoken

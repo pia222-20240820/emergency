@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    {% load static %}
+    {% load custom_tags %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>응급처치 대응 매뉴얼 조회 시스템</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+    
+    <div class="sidebar" id="sidebar">
+        <h1>📍 위치 검색</h1>
+        <form method="POST" id="location-form">
+            {% csrf_token %}
+            <label for="location_query">병원 위치를 입력하세요:</label>
+            <input type="text" id="location_query" name="location_query" value="{{ location_query }}">
+            <button type="submit">
+                <i class="fa-solid fa-magnifying-glass"></i> 검색
+            </button>
+            
+        </form>
+
+        {% if location_data.items %}
+            <h2>병원 위치 정보:</h2>
+            {% for item, map_html_path in location_data.items|zip_lists:map_html_paths %}
+                <div class="response">
+                    <p>
+                        <a href="{{ item.link }}" target="_blank"><b>{{ item.title|safe }}</b></a><br>
+                        📍 {{ item.address }}<br>
+                        🪧 {{ item.roadAddress }}<br>
+                        👩‍⚕️ {{ item.category }}
+                    </p>
+                    {% if map_html_path %}
+                        <div class="map-container">
+                            <iframe src="/{{ map_html_path }}"></iframe>
+                        </div>
+                    {% else %}
+                        <p>지도를 생성할 수 없습니다.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>위치를 찾을 수 없습니다.</p>
+        {% endif %}
+    </div>
+
+    <div class="main-content" id="main-content">
+        <h1>🚨 SKN05-4ST-2Team 🚨</h1>
+        <p><b>응급처치 대응 매뉴얼 조회 시스템 + 인근 병원 조회 서비스</b></p>
+
+        <div class="chat-container" id="chat-container">
+            {% for message in chat_history %}
+                <div class="chat-message user">
+                    <div class="chat-bubble">{{ message.user }}</div>
+                    <div class="avatar">U</div>
+                </div>
+                <div class="chat-message">
+                    <div class="avatar">A</div>
+                    <div class="chat-bubble">{{ message.ai }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div id="loading-message" class="loading-spinner" style="display: none;">
+            <span>AI가 답변을 생성 중입니다...</span>
+            <div class="spinner"></div>
+        </div>
+
+        <form method="POST" id="chat-form" style="display: flex; gap: 10px;">
+            {% csrf_token %}
+            <input type="text" id="query" name="query" value="{{ query }}" placeholder="질문을 입력하세요..." style="flex-grow: 1;">
+            <button type="submit">
+                <i class="fa-solid fa-paper-plane"></i> 질문하기
+            </button>
+            
+            <button type="button" id="reset-chat">
+                <i class="fa-solid fa-rotate-right"></i> 초기화
+            </button>
+            
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('chat-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const loadingMessage = document.getElementById('loading-message');
+            loadingMessage.style.display = 'flex';
+
+            const formData = new FormData(this);
+            fetch('', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const chatContainer = document.getElementById('chat-container');
+                chatContainer.innerHTML += `
+                    <div class="chat-message user">
+                        <div class="chat-bubble">${data.user}</div>
+                        <div class="avatar">U</div>
+                    </div>
+                    <div class="chat-message">
+                        <div class="avatar">A</div>
+                        <div class="chat-bubble">${data.ai}</div>
+                    </div>
+                `;
+                loadingMessage.style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingMessage.style.display = 'none';
+            });
+        });
+
+        document.getElementById('reset-chat').addEventListener('click', function() {
+            fetch('/reset-chat', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(() => {
+                document.getElementById('chat-container').innerHTML = '';
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>
